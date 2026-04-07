@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="tr" data-bs-theme="light">
+<html lang="tr" data-bs-theme="dark">
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -1307,41 +1307,6 @@
         // Year
         var yearEl = document.getElementById('year');
         if (yearEl) yearEl.textContent = String(new Date().getFullYear());
-
-        // Theme toggle (self-contained; main.js varsa çakışmayacak şekilde korumalı)
-        (function initThemeToggle() {
-            var html = document.documentElement;
-            var btn = document.getElementById('themeToggle');
-            if (!btn || !html) return;
-
-            var key = 'medsem_theme';
-
-            function apply(theme) {
-                html.setAttribute('data-bs-theme', theme);
-                var icon = btn.querySelector('i');
-                if (icon) {
-                    icon.className = (theme === 'dark') ? 'bi bi-sun' : 'bi bi-moon-stars';
-                }
-                btn.setAttribute('aria-label', theme === 'dark' ? 'Açık temaya geç' : 'Koyu temaya geç');
-            }
-
-            var saved = null;
-            try {
-                saved = localStorage.getItem(key);
-            } catch (e) {
-            }
-            if (saved === 'light' || saved === 'dark') apply(saved);
-
-            btn.addEventListener('click', function () {
-                var current = html.getAttribute('data-bs-theme') === 'dark' ? 'dark' : 'light';
-                var next = current === 'dark' ? 'light' : 'dark';
-                apply(next);
-                try {
-                    localStorage.setItem(key, next);
-                } catch (e) {
-                }
-            });
-        })();
 
         // Swiper init (guard)
         if (typeof Swiper !== 'undefined') {
