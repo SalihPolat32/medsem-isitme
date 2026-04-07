@@ -1,104 +1,157 @@
 // Med-SEM one-page JS (year + theme toggle)
 
 (function () {
+  "use strict";
+
   // Footer year
-  var yearEl = document.getElementById('year');
-  if (yearEl) yearEl.textContent = new Date().getFullYear();
+  var yearEl = document.getElementById("year");
+  if (yearEl) {
+    yearEl.textContent = new Date().getFullYear();
+  }
 
   // Theme (Bootstrap 5.3 data-bs-theme)
   var root = document.documentElement;
-  var toggleBtn = document.getElementById('themeToggle');
+  var toggleBtn = document.getElementById("themeToggle");
 
   function preferredTheme() {
     try {
-      return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      return window.matchMedia &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light";
     } catch (e) {
-      return 'light';
+      return "light";
     }
+  }
+
+  function updateThemeIcon(theme) {
+    if (!toggleBtn) return;
+
+    var icon = toggleBtn.querySelector("i");
+    if (!icon) return;
+
+    icon.className = theme === "dark" ? "bi bi-sun" : "bi bi-moon-stars";
   }
 
   function applyTheme(theme) {
-    root.setAttribute('data-bs-theme', theme);
-    try { localStorage.setItem('theme', theme); } catch (e) {}
+    var nextTheme = theme === "dark" ? "dark" : "light";
 
-    // Update icon if exists
-    var icon = toggleBtn ? toggleBtn.querySelector('i') : null;
-    if (icon) {
-      icon.className = (theme === 'dark') ? 'bi bi-sun' : 'bi bi-moon-stars';
-    }
+    root.setAttribute("data-bs-theme", nextTheme);
+
+    try {
+      localStorage.setItem("theme", nextTheme);
+    } catch (e) {}
+
+    updateThemeIcon(nextTheme);
   }
 
-  var saved = null;
-  try { saved = localStorage.getItem('theme'); } catch (e) {}
-  applyTheme(saved || preferredTheme());
+  function initTheme() {
+    var saved = null;
 
-  if (toggleBtn) {
-    toggleBtn.addEventListener('click', function () {
-      var current = root.getAttribute('data-bs-theme') || 'light';
-      applyTheme(current === 'dark' ? 'light' : 'dark');
+    try {
+      saved = localStorage.getItem("theme");
+    } catch (e) {}
+
+    applyTheme(saved || preferredTheme());
+  }
+
+  function bindThemeToggle() {
+    if (!toggleBtn || toggleBtn.dataset.themeBound === "1") return;
+
+    toggleBtn.addEventListener("click", function () {
+      var current = root.getAttribute("data-bs-theme") || "light";
+      applyTheme(current === "dark" ? "light" : "dark");
     });
+
+    toggleBtn.dataset.themeBound = "1";
   }
 
-  // Blog: "Devamını oku" tekil çalışsın (bir kart açılınca diğerleri kapanır)
-  document.addEventListener('DOMContentLoaded', function () {
-    var blog = document.getElementById('blog');
+  function initBlogAccordion() {
+    var blog = document.getElementById("blog");
     if (!blog) return;
 
-    var detailsList = Array.prototype.slice.call(blog.querySelectorAll('details.blog-details'));
+    var detailsList = Array.prototype.slice.call(
+        blog.querySelectorAll("details.blog-details")
+    );
+
     if (!detailsList.length) return;
 
-    // Blog kartlarını, tüm "Devamını oku" alanları kapalıyken aynı yüksekliğe eşitleyerek
-    // grid görünümünü daha dengeli/premium hale getir.
     function equalizeBlogCards() {
-      var cards = Array.prototype.slice.call(blog.querySelectorAll('.blog-card'));
+      var cards = Array.prototype.slice.call(blog.querySelectorAll(".blog-card"));
       if (!cards.length) return;
 
-      // Ölçüm için: açık olan details'ları geçici olarak kapat (sonra geri açacağız)
-      var openStates = detailsList.map(function (d) { return !!d.open; });
-      detailsList.forEach(function (d) { d.removeAttribute('open'); });
+      var openStates = detailsList.map(function (d) {
+        return !!d.open;
+      });
 
-      // Önce sıfırla, sonra max yüksekliği bul
-      cards.forEach(function (c) { c.style.minHeight = ''; });
+      detailsList.forEach(function (d) {
+        d.removeAttribute("open");
+      });
 
-      // Bir sonraki frame'de ölç (layout otursun)
+      cards.forEach(function (c) {
+        c.style.minHeight = "";
+      });
+
       requestAnimationFrame(function () {
         var maxH = 0;
+
         cards.forEach(function (c) {
           var h = c.getBoundingClientRect().height;
           if (h > maxH) maxH = h;
         });
-        maxH = Math.ceil(maxH);
-        cards.forEach(function (c) { c.style.minHeight = maxH + 'px'; });
 
-        // Önceki open durumunu geri yükle
+        maxH = Math.ceil(maxH);
+
+        cards.forEach(function (c) {
+          c.style.minHeight = maxH + "px";
+        });
+
         detailsList.forEach(function (d, i) {
-          if (openStates[i]) d.setAttribute('open', '');
+          if (openStates[i]) {
+            d.setAttribute("open", "");
+          }
         });
       });
     }
 
-    // İlk yüklemede ve resize'da çalıştır
     var resizeTimer = null;
+
     function scheduleEqualize() {
-      if (resizeTimer) window.clearTimeout(resizeTimer);
+      if (resizeTimer) {
+        window.clearTimeout(resizeTimer);
+      }
+
       resizeTimer = window.setTimeout(equalizeBlogCards, 60);
     }
 
-    // DOM hazır olduğunda hızlı bir kez, tam yüklemede bir kez daha
     scheduleEqualize();
-    window.addEventListener('load', scheduleEqualize);
-    window.addEventListener('resize', scheduleEqualize);
+    window.addEventListener("load", scheduleEqualize);
+    window.addEventListener("resize", scheduleEqualize);
 
     detailsList.forEach(function (d) {
-      d.addEventListener('toggle', function () {
+      d.addEventListener("toggle", function () {
         if (!d.open) return;
+
         detailsList.forEach(function (other) {
-          if (other !== d) other.removeAttribute('open');
+          if (other !== d) {
+            other.removeAttribute("open");
+          }
         });
 
-        // Aç/kapat sonrası layout değişebilir; yükseklikleri yeniden eşitle
         scheduleEqualize();
       });
     });
-  });
+  }
+
+  function init() {
+    initTheme();
+    bindThemeToggle();
+    initBlogAccordion();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
 })();
